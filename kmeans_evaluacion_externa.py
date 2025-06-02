@@ -45,7 +45,7 @@ def evaluacion_clusters_kmeans(
 
     # Gráficos
     sns.set(style="whitegrid")
-    fig, axes = plt.subplots(2, 2, figsize=(12, 8))
+    fig, axes = plt.subplots(2, 2, figsize=(10, 6))
     
     sns.lineplot(x=k_vals, y=homogeneity_indices, marker="o", color="steelblue", ax=axes[0, 0])
     axes[0, 0].set_title("Índice de homogeneidad", fontsize=10)

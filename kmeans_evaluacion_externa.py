@@ -6,10 +6,11 @@ import pandas as pd
 from typing import List, Tuple
 
 def evaluacion_clusters_kmeans(
-    df_X: pd.DataFrame, 
-    K_max: int, 
-    y: List[int]
-) -> Tuple[List[int], List[float], List[float], List[float], List[float]]:
+    df_X: pd.DataFrame,
+    y: List[int],
+    K_max: int,
+    figsize: Tuple[int, int] = (10, 5)
+) -> pd.DataFrame:
     """
     Calcula y grafica métricas de evaluación para clustering:
     homogeneidad, información mutua, Rand ajustado e inercia.
@@ -18,13 +19,10 @@ def evaluacion_clusters_kmeans(
     - df_X: DataFrame de características.
     - K_max: Número máximo de clusters a evaluar.
     - y: Etiquetas reales.
+    - figsize: Tamaño de la figura (opcional, por defecto (10, 5)).
 
     Retorna:
-    - k_vals: lista de valores de k.
-    - inertias: lista de inercias.
-    - homogeneity_indices: lista de índices de homogeneidad.
-    - mutual_indices: lista de índices de información mutua.
-    - rand_indices: lista de índices de Rand ajustado.
+    - results_df: DataFrame con las métricas para cada k.
     """
     homogeneity_indices = []
     mutual_indices = []
@@ -37,45 +35,53 @@ def evaluacion_clusters_kmeans(
         model_KMeans = KMeans(n_clusters=k, random_state=32)
         clusters_n = model_KMeans.fit_predict(df_X)
         
-        # Métricas de evaluación
         homogeneity_indices.append(homogeneity_score(y, clusters_n))
         mutual_indices.append(mutual_info_score(y, clusters_n))
         rand_indices.append(adjusted_rand_score(y, clusters_n))
         inertias.append(model_KMeans.inertia_)
 
-    # Gráficos
+    # Crear DataFrame con los resultados
+    results_df = pd.DataFrame({
+        "k": k_vals,
+        "inertia": inertias,
+        "homogeneity": homogeneity_indices,
+        "mutual_info": mutual_indices,
+        "adjusted_rand": rand_indices
+    })
+
+    # Gráficos (2x2 siempre, figsize opcional)
     sns.set(style="whitegrid")
-    fig, axes = plt.subplots(2, 2, figsize=(10, 5))
+    fig, axes = plt.subplots(2, 2, figsize=figsize)
     
-    sns.lineplot(x=k_vals, y=homogeneity_indices, marker="o", color="steelblue", ax=axes[0, 0])
+    sns.lineplot(data=results_df, x="k", y="homogeneity", marker="o", color="steelblue", ax=axes[0, 0])
     axes[0, 0].set_title("Índice de homogeneidad", fontsize=10)
     axes[0, 0].set_xlabel("Número de clusters (k)", fontsize=9)
+    axes[0, 0].set_ylabel("Homogeneidad", fontsize=9)
     axes[0, 0].tick_params(axis='x', labelsize=8)
     axes[0, 0].tick_params(axis='y', labelsize=8)
-    axes[0, 0].set_ylabel("")
 
-    sns.lineplot(x=k_vals, y=mutual_indices, marker="o", color="darkorange", ax=axes[0, 1])
+    sns.lineplot(data=results_df, x="k", y="mutual_info", marker="o", color="darkorange", ax=axes[0, 1])
     axes[0, 1].set_title("Índice de información mutua", fontsize=10)
     axes[0, 1].set_xlabel("Número de clusters (k)", fontsize=9)
+    axes[0, 1].set_ylabel("Mutual Info", fontsize=9)
     axes[0, 1].tick_params(axis='x', labelsize=8)
     axes[0, 1].tick_params(axis='y', labelsize=8)
-    axes[0, 1].set_ylabel("")
 
-    sns.lineplot(x=k_vals, y=rand_indices, marker="o", color="seagreen", ax=axes[1, 0])
+    sns.lineplot(data=results_df, x="k", y="adjusted_rand", marker="o", color="seagreen", ax=axes[1, 0])
     axes[1, 0].set_title("Índice de Rand ajustado", fontsize=10)
     axes[1, 0].set_xlabel("Número de clusters (k)", fontsize=9)
+    axes[1, 0].set_ylabel("Rand ajustado", fontsize=9)
     axes[1, 0].tick_params(axis='x', labelsize=8)
     axes[1, 0].tick_params(axis='y', labelsize=8)
-    axes[1, 0].set_ylabel("")
 
-    sns.lineplot(x=k_vals, y=inertias, marker="o", color="purple", ax=axes[1, 1])
+    sns.lineplot(data=results_df, x="k", y="inertia", marker="o", color="purple", ax=axes[1, 1])
     axes[1, 1].set_title("Inercia", fontsize=10)
     axes[1, 1].set_xlabel("Número de clusters (k)", fontsize=9)
+    axes[1, 1].set_ylabel("Inercia", fontsize=9)
     axes[1, 1].tick_params(axis='x', labelsize=8)
     axes[1, 1].tick_params(axis='y', labelsize=8)
-    axes[1, 1].set_ylabel("")
 
     plt.tight_layout()
     plt.show()
 
-    return k_vals, inertias, homogeneity_indices, mutual_indices, rand_indices
+    return results_df
